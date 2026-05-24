@@ -25,6 +25,63 @@ Self-hosted HTML presentation library with a public browsing page and a password
 
 ## Quick start
 
+### Option A — pre-built image (no clone needed)
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/usr/share/nginx/html/public:ro
+      - presentations:/usr/share/nginx/html/presentations:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    image: ghcr.io/sitolam/presentation-hub:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=3000
+    volumes:
+      - presentations:/data/presentations
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  presentations:
+```
+
+Then:
+
+```bash
+# 1. Grab the nginx config and frontend from the repo
+curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/nginx.conf -o nginx.conf
+mkdir -p public
+curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/public/index.html -o public/index.html
+curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/public/admin.html -o public/admin.html
+
+# 2. Configure
+curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/.env.example -o .env
+# Edit .env — set ADMIN_USERNAME, ADMIN_PASSWORD, and SESSION_SECRET
+
+# 3. Start
+docker compose up -d
+```
+
+### Option B — clone and build locally
+
 ```bash
 # 1. Clone
 git clone https://github.com/sitolam/presentation-hub.git
@@ -39,10 +96,13 @@ openssl rand -hex 32
 
 # 4. Start
 docker compose up -d
+```
 
-# 5. Open
-open http://localhost:8080        # public site
-open http://localhost:8080/admin  # admin panel
+In both cases, open:
+
+```
+http://localhost:8080        # public site
+http://localhost:8080/admin  # admin panel
 ```
 
 ---
