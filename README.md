@@ -19,7 +19,7 @@ Self-hosted HTML presentation library with a public browsing page and a password
 | **Rename** | Edit the display name inline without a page reload |
 | **Delete** | Confirmation dialog before removal |
 | **Session auth** | Signed HTTP-only cookies, 8-hour sessions |
-| **Docker Compose** | Two services — Nginx + Node/Express API |
+| **Single Docker image** | Nginx + Node/Express API bundled in one container |
 
 ---
 
@@ -27,56 +27,49 @@ Self-hosted HTML presentation library with a public browsing page and a password
 
 ### Option A — pre-built image (no clone needed)
 
-Create a `docker-compose.yml`:
+Everything (nginx + Node API + frontend) is bundled in a single image. Create two files:
+
+**`docker-compose.yml`**
 
 ```yaml
 services:
-  nginx:
-    image: nginx:alpine
+  app:
+    image: ghcr.io/sitolam/presentation-hub:latest
+    container_name: presentation-hub
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./public:/usr/share/nginx/html/public:ro
-      - presentations:/usr/share/nginx/html/presentations:ro
-    depends_on:
-      api:
-        condition: service_healthy
-
-  api:
-    image: ghcr.io/sitolam/presentation-hub:latest
-    restart: unless-stopped
     env_file: .env
     environment:
       - PORT=3000
     volumes:
-      - presentations:/data/presentations
+      - ./presentations:/data/presentations
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost/api/health"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 30s
+```
 
-volumes:
-  presentations:
+**`.env`**
+
+```env
+PORT=8080
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=changeme
+SESSION_SECRET=replace-this-with-a-random-secret
+MAX_UPLOAD_MB=50
 ```
 
 Then:
 
 ```bash
-# 1. Grab the nginx config and frontend from the repo
-curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/nginx.conf -o nginx.conf
-mkdir -p public
-curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/public/index.html -o public/index.html
-curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/nginx/public/admin.html -o public/admin.html
+# Generate a strong session secret and paste it into .env
+openssl rand -hex 32
 
-# 2. Configure
-curl -fsSL https://raw.githubusercontent.com/sitolam/presentation-hub/main/.env.example -o .env
-# Edit .env — set ADMIN_USERNAME, ADMIN_PASSWORD, and SESSION_SECRET
-
-# 3. Start
+# Start
+mkdir -p presentations
 docker compose up -d
 ```
 
