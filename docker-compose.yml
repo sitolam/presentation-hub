@@ -18,6 +18,8 @@ services:
     container_name: presentation-hub-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      - PORT=3000
     volumes:
       - ./presentations:/data/presentations
     healthcheck:

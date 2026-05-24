@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 - `CHANGELOG.md` — this file.
 
 ### Fixed
+- API port conflict — `PORT=8080` from `.env` was being passed to the API container via `env_file`, so the server started on `:8080` while the healthcheck probed `:3000`, causing the container to always be unhealthy. The api service now pins `PORT=3000` via `environment`, which takes precedence over `env_file`; the nginx host port mapping reads `PORT` from compose variable substitution and is unaffected.
 - CI unhealthy container failure — `docker compose up -d` was starting nginx and the API together; nginx has `depends_on: condition: service_healthy` so it aborted immediately if the API health check had not yet passed. The CI now starts the API first, waits up to 90 s for it to become healthy (with log output on failure), then starts nginx.
 - Healthcheck timing in `docker-compose.yml` tightened: `interval` reduced from 15 s to 5 s and `start_period` raised from 10 s to 30 s so the container has enough time to initialise while still detecting real failures quickly.
 
