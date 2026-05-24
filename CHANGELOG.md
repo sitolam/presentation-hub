@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ---
 
+## [1.2.0] - 2026-05-24
+
+### Changed
+- Merged nginx and Node/Express into a single Docker image — nginx is installed via `apk` in the `node:20-alpine` base and started by `docker-entrypoint.sh` alongside the API. Removes the two-container dependency and simplifies deployment to a single `docker compose up`.
+- `docker-compose.yml` collapsed from two services (`nginx` + `api`) to one (`app`).
+- Build context for the GHCR workflow changed from `./api` to `.` (repo root).
+- README Quick Start updated with a single-image `docker-compose.yml` example that requires no local clone.
+
+### Fixed
+- Healthcheck now probes `http://127.0.0.1/api/health` (explicit IPv4) — Alpine resolves `localhost` to `::1` (IPv6) and nginx was only bound to `0.0.0.0:80`, so the previous probe got connection refused.
+- Added `listen [::]:80` to nginx so both IPv4 and IPv6 are covered.
+- nginx errors now route to stderr via `error_log stderr warn` — previously they were written to `/var/log/nginx/error.log` and invisible in `docker logs`.
+- `nginx.conf` is now a self-contained full config copied to `/etc/nginx/nginx.conf` directly, removing reliance on Alpine's include path (`http.d` vs `conf.d` varies by version).
+- `nginx -t` added to the Dockerfile so config errors fail the image build immediately rather than surfacing only at healthcheck time.
+- Runtime directories (`/run`, `/var/cache/nginx/client_temp`, `/var/log/nginx`) created in the entrypoint — they may be absent in `node:20-alpine` and caused nginx to silently crash on start.
+
+---
+
 ## [1.1.0] - 2026-05-24
 
 ### Added
@@ -34,6 +52,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 - `.env.example` with documented configuration variables.
 - `example.html` seed presentation.
 
-[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/sitolam/presentation-hub/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sitolam/presentation-hub/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/sitolam/presentation-hub/releases/tag/v1.0.0
