@@ -15,19 +15,28 @@ jobs:
       - name: Build Docker images
         run: docker compose build
 
-      - name: Start stack
-        run: |
-          cp .env.example .env
-          docker compose up -d
+      - name: Copy env file
+        run: cp .env.example .env
 
-      - name: Wait for healthy
+      - name: Start API
+        run: docker compose up -d api
+
+      - name: Wait for API healthy
         run: |
-          for i in $(seq 1 20); do
+          for i in $(seq 1 30); do
             STATUS=$(docker inspect --format='{{.State.Health.Status}}' presentation-hub-api 2>/dev/null || echo "waiting")
-            echo "API health: $STATUS"
+            echo "API health: $STATUS ($i/30)"
             [ "$STATUS" = "healthy" ] && break
+            if [ "$i" = "30" ]; then
+              echo "API never became healthy — container logs:"
+              docker logs presentation-hub-api
+              exit 1
+            fi
             sleep 3
           done
+
+      - name: Start nginx
+        run: docker compose up -d nginx
 
       - name: Smoke test — public API
         run: curl -sf http://localhost:8080/api/presentations

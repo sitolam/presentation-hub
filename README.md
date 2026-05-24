@@ -1,9 +1,10 @@
-# 🖥️ Presentation Hub
+# Presentation Hub
 
-Self-host and manage HTML presentations with a public browsing page and a
-password-protected admin panel — all in a single Docker Compose stack.
+Self-hosted HTML presentation library with a public browsing page and a password-protected admin panel — all in a single Docker Compose stack.
 
-![CI](https://github.com/sitolam/presentation-hub/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/sitolam/presentation-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/sitolam/presentation-hub/actions/workflows/ci.yml)
+[![Docker](https://github.com/sitolam/presentation-hub/actions/workflows/docker.yml/badge.svg)](https://github.com/sitolam/presentation-hub/actions/workflows/docker.yml)
+[![GHCR](https://img.shields.io/badge/ghcr.io-sitolam%2Fpresentation--hub-blue?logo=github)](https://github.com/sitolam/presentation-hub/pkgs/container/presentation-hub)
 
 ---
 
@@ -11,14 +12,14 @@ password-protected admin panel — all in a single Docker Compose stack.
 
 | | |
 |---|---|
-| 🌐 **Public landing page** | `/` — anyone can browse and open presentations |
-| 🔐 **Protected admin panel** | `/admin` — login required to upload / manage |
-| ⬆️ **Upload** | Drag-and-drop or file picker, set a display name |
-| 🔄 **Replace** | Upload a new version of an existing presentation in place |
-| ✏️ **Rename** | Edit the display name inline without a page reload |
-| 🗑️ **Delete** | Confirmation dialog before removal |
-| 🍪 **Session auth** | Signed HTTP-only cookies, 8-hour sessions |
-| 🐳 **Docker Compose** | Two services — Nginx + Node/Express API |
+| **Public landing page** | `/` — anyone can browse and open presentations |
+| **Protected admin panel** | `/admin` — login required to upload and manage |
+| **Upload** | Drag-and-drop or file picker, set a display name |
+| **Replace** | Upload a new version of an existing presentation in-place |
+| **Rename** | Edit the display name inline without a page reload |
+| **Delete** | Confirmation dialog before removal |
+| **Session auth** | Signed HTTP-only cookies, 8-hour sessions |
+| **Docker Compose** | Two services — Nginx + Node/Express API |
 
 ---
 
@@ -31,9 +32,9 @@ cd presentation-hub
 
 # 2. Configure
 cp .env.example .env
-#    → edit .env: set ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET
+# Edit .env — set ADMIN_USERNAME, ADMIN_PASSWORD, and SESSION_SECRET
 
-# 3. Generate a strong session secret (recommended)
+# 3. Generate a strong session secret
 openssl rand -hex 32
 
 # 4. Start
@@ -48,17 +49,17 @@ open http://localhost:8080/admin  # admin panel
 
 ## Configuration
 
-All configuration is done via environment variables in `.env`:
+All configuration lives in `.env`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `8080` | Host port the app is exposed on |
+| `PORT` | `8080` | Host port the app listens on |
 | `ADMIN_USERNAME` | `admin` | Admin panel username |
-| `ADMIN_PASSWORD` | `changeme` | Admin panel password |
-| `SESSION_SECRET` | *(dev value)* | Secret used to sign session cookies — **must be changed in production** |
-| `MAX_UPLOAD_MB` | `50` | Maximum file upload size in MB |
+| `ADMIN_PASSWORD` | `changeme` | Admin panel password — **change this** |
+| `SESSION_SECRET` | *(dev value)* | Secret for signing session cookies — **change this** |
+| `MAX_UPLOAD_MB` | `50` | Maximum upload size in MB |
 
-> ⚠️ **Never commit `.env`** — it is listed in `.gitignore`.
+> **Never commit `.env`** — it is in `.gitignore`.
 
 ---
 
@@ -68,7 +69,8 @@ All configuration is done via environment variables in `.env`:
 presentation-hub/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml              # GitHub Actions — build + smoke tests
+│       ├── ci.yml              # Build + smoke tests on push/PR
+│       └── docker.yml          # Build & push to GHCR on tag
 ├── api/
 │   ├── Dockerfile
 │   ├── package.json
@@ -77,8 +79,8 @@ presentation-hub/
 │   ├── nginx.conf              # Reverse proxy config
 │   └── public/
 │       ├── index.html          # Public landing page
-│       └── admin.html          # Admin SPA (login + management UI)
-├── presentations/              # Uploaded HTML files (mounted as a volume)
+│       └── admin.html          # Admin SPA
+├── presentations/              # Uploaded HTML files (volume-mounted)
 │   └── example.html
 ├── .env.example
 ├── .gitignore
@@ -88,63 +90,77 @@ presentation-hub/
 
 ---
 
-## Services
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│  Host :8080                                     │
-│                                                 │
-│  ┌─────────────────────────────────────────┐    │
-│  │  nginx                                  │    │
-│  │  /:8080          → public/index.html    │    │
-│  │  /admin          → public/admin.html    │    │
-│  │  /presentations/ → ./presentations/     │    │
-│  │  /api/*          → api:3000             │    │
-│  └──────────────────────┬──────────────────┘    │
-│                         │ internal              │
-│  ┌──────────────────────▼──────────────────┐    │
-│  │  api (Node/Express) :3000               │    │
-│  │  POST   /auth/login                     │    │
-│  │  POST   /auth/logout                    │    │
-│  │  GET    /auth/me                        │    │
-│  │  GET    /presentations      (public)    │    │
-│  │  POST   /presentations      (auth)      │    │
-│  │  PATCH  /presentations/:fn  (auth)      │    │
-│  │  DELETE /presentations/:fn  (auth)      │    │
-│  └─────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────┘
+Host :8080
+┌──────────────────────────────────────────────┐
+│  nginx                                       │
+│  /               → public/index.html         │
+│  /admin          → public/admin.html         │
+│  /presentations/ → ./presentations/          │
+│  /api/*          → api:3000                  │
+└──────────────────────┬───────────────────────┘
+                       │ internal network
+┌──────────────────────▼───────────────────────┐
+│  api  (Node/Express)  :3000                  │
+│  POST   /auth/login                          │
+│  POST   /auth/logout                         │
+│  GET    /auth/me                             │
+│  GET    /presentations         (public)      │
+│  POST   /presentations         (auth)        │
+│  PATCH  /presentations/:file   (auth)        │
+│  DELETE /presentations/:file   (auth)        │
+└──────────────────────────────────────────────┘
 ```
 
 ---
 
 ## API reference
 
-All routes are accessed via `/api/` (proxied by Nginx).
+All routes are accessed via the `/api/` prefix (proxied by Nginx).
 
 ### Auth
 
-| Method | Path | Body | Auth | Description |
-|---|---|---|---|---|
-| `POST` | `/api/auth/login` | `{ username, password }` | — | Create session |
-| `POST` | `/api/auth/logout` | — | — | Destroy session |
-| `GET` | `/api/auth/me` | — | — | Check session status |
+| Method | Path | Body | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | `{ username, password }` | Create session |
+| `POST` | `/api/auth/logout` | — | Destroy session |
+| `GET` | `/api/auth/me` | — | Check session status |
 
 ### Presentations
 
 | Method | Path | Body / Form | Auth | Description |
 |---|---|---|---|---|
-| `GET` | `/api/presentations` | — | — | List all presentations |
-| `POST` | `/api/presentations` | `file`, `name`, `existingFilename?` | ✅ | Upload / replace |
-| `PATCH` | `/api/presentations/:filename` | `{ displayName }` | ✅ | Rename |
-| `DELETE` | `/api/presentations/:filename` | — | ✅ | Delete |
+| `GET` | `/api/presentations` | — | — | List all |
+| `POST` | `/api/presentations` | `file`, `name`, `existingFilename?` | required | Upload / replace |
+| `PATCH` | `/api/presentations/:filename` | `{ displayName }` | required | Rename |
+| `DELETE` | `/api/presentations/:filename` | — | required | Delete |
+
+---
+
+## Docker image
+
+Tagged releases are automatically built and pushed to GHCR:
+
+```bash
+docker pull ghcr.io/sitolam/presentation-hub:latest
+```
+
+To release a new version, push a semver tag:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
 
 ---
 
 ## Production notes
 
-- Put the stack behind a reverse proxy (e.g. Caddy, Traefik) with **HTTPS**.
+- Put the stack behind a reverse proxy (Caddy, Traefik, etc.) with **HTTPS**.
 - Set `secure: true` on the session cookie in `api/server.js` once HTTPS is in place.
-- Use a strong random `SESSION_SECRET` (`openssl rand -hex 32`).
+- Use a strong random `SESSION_SECRET` — generate one with `openssl rand -hex 32`.
 - Change the default `ADMIN_PASSWORD` before exposing the service publicly.
 
 ---
@@ -152,18 +168,19 @@ All routes are accessed via `/api/` (proxied by Nginx).
 ## Development
 
 ```bash
-# Run API locally (Node 20+)
 cd api
 npm install
-PRESENTATIONS_DIR=../presentations ADMIN_USERNAME=admin ADMIN_PASSWORD=dev \
-  SESSION_SECRET=devsecret node server.js
+PRESENTATIONS_DIR=../presentations \
+  ADMIN_USERNAME=admin \
+  ADMIN_PASSWORD=dev \
+  SESSION_SECRET=devsecret \
+  node server.js
 ```
 
-The API runs on `:3000`; open the HTML files directly in a browser or use
-`npx serve nginx/public` to serve the front-end.
+The API runs on `:3000`. Open the HTML files directly in a browser or run `npx serve nginx/public` to serve the frontend.
 
 ---
 
 ## License
 
-MIT
+[MIT](LICENSE)
