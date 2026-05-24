@@ -1,0 +1,28 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: presentation-hub-nginx
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/public:/usr/share/nginx/html/public:ro
+      - ./presentations:/usr/share/nginx/html/presentations:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    build: ./api
+    container_name: presentation-hub-api
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./presentations:/data/presentations
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

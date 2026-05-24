@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Presentation Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #08090c;
+      --surface:  #111318;
+      --raised:   #181b22;
+      --border:   #21252f;
+      --border2:  #2d3240;
+      --accent:   #6c8aff;
+      --accent-d: #4a6adf;
+      --green:    #4fd18a;
+      --red:      #ff5f5f;
+      --amber:    #fbbf24;
+      --text:     #dde2f0;
+      --muted:    #525870;
+      --mono:     'Syne Mono', monospace;
+      --sans:     'Syne', sans-serif;
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    /* Subtle noise */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    }
+
+    /* ── Views ────────────────────────────────────────────────────────────── */
+    .view { display: none; position: relative; z-index: 1; }
+    .view.active { display: block; }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       LOGIN
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    #view-login.active { display: flex; }
+
+    /* Radial glow behind card */
+    #view-login::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 55% 45% at 50% 50%, rgba(108,138,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      position: relative;
+    }
+
+    .login-logo {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .login-card h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+    }
+    .login-card .sub {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+    .field input {
+      width: 100%;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,138,255,0.15);
+    }
+    .field input::placeholder { color: var(--muted); }
+
+    #login-error {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--red);
+      min-height: 1.2em;
+      margin-bottom: 1rem;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      position: relative;
+    }
+    .btn-login:hover { background: var(--accent-d); }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-footer {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .login-footer a {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .login-footer a:hover { color: var(--accent); }
+
+    /* ════════════════════════════════════════════════════════════════════════
+       ADMIN SHELL
+    ════════════════════════════════════════════════════════════════════════ */
+    #view-admin {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+    }
+    #view-admin.active { display: grid; }
+
+    /* Top bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.75rem;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-logo {
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+    }
+    .topbar-title { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.01em; }
+    .topbar-badge {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      background: rgba(108,138,255,0.15);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 0.15em 0.6em;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .topbar-user {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .btn-sm {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--raised);
+      color: var(--text);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Main content */
+    .admin-body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 0;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+    @media (max-width: 768px) {
+      .admin-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; overflow: auto; }
+    }
+
+    /* Upload panel */
+    .upload-panel {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.75rem;
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Replace banner */
+    .replace-banner {
+      display: none;
+      background: rgba(108,138,255,0.08);
+      border: 1px solid rgba(108,138,255,0.25);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.78rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .replace-banner.show { display: flex; }
+    .replace-banner strong { color: var(--accent); }
+    .replace-banner button {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 0.9rem; padding: 0;
+    }
+    .replace-banner button:hover { color: var(--red); }
+
+    /* Form fields */
+    .f-label {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .f-input {
+      width: 100%;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.6rem 0.85rem;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      margin-bottom: 1rem;
+    }
+    .f-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,138,255,0.12);
+    }
+    .f-input::placeholder { color: var(--muted); }
+
+    /* Drop zone */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 9px;
+      padding: 1.75rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 1rem;
+    }
+    .dropzone:hover, .dropzone.over { border-color: var(--accent); background: rgba(108,138,255,0.05); }
+    .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .dz-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+    .dz-text { font-size: 0.78rem; color: var(--muted); }
+    .dz-text strong { color: var(--accent); }
+    .dz-file {
+      margin-top: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--green);
+      display: none;
+    }
+
+    /* Upload button + status */
+    .btn-upload {
+      width: 100%;
+      padding: 0.72rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      margin-bottom: 0.75rem;
+    }
+    .btn-upload:hover:not(:disabled) { background: var(--accent-d); }
+    .btn-upload:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    .progress-rail { height: 2px; background: var(--border); border-radius: 2px; margin-bottom: 0.5rem; display: none; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); width: 0; transition: width 0.3s; border-radius: 2px; }
+
+    .upload-msg {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      min-height: 1.1em;
+    }
+    .ok  { color: var(--green); }
+    .err { color: var(--red); }
+
+    /* Presentations list panel */
+    .list-panel {
+      overflow-y: auto;
+      padding: 1.75rem;
+    }
+
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .list-header .panel-title { margin-bottom: 0; }
+    #pres-count {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      background: rgba(108,138,255,0.12);
+      color: var(--accent);
+      padding: 0.15em 0.65em;
+      border-radius: 20px;
+    }
+
+    #pres-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .pres-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transition: border-color 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(5px); } }
+    .pres-card:hover { border-color: var(--border2); }
+
+    .pres-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(108,138,255,0.1);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+
+    .pres-info { flex: 1; min-width: 0; }
+    .pres-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pres-meta {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .rename-inp {
+      width: 100%;
+      background: var(--raised);
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      padding: 0.25rem 0.5rem;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.875rem;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .pres-actions { display: flex; gap: 0.35rem; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: var(--muted);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border2); }
+    .icon-btn.open:hover  { color: var(--accent); border-color: var(--accent); }
+    .icon-btn.del:hover   { color: var(--red); border-color: var(--red); background: rgba(255,95,95,0.06); }
+    .icon-btn.rep:hover   { color: var(--amber); border-color: var(--amber); }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+    }
+    .empty-state .ei { font-size: 2.2rem; margin-bottom: 0.6rem; }
+
+    /* Confirm modal */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      max-width: 360px; width: 100%;
+      animation: pop 0.18s ease;
+    }
+    @keyframes pop { from { opacity:0; transform:scale(0.93); } }
+    .modal h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+    .modal p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+    .modal-btns { display: flex; gap: 0.75rem; justify-content: flex-end; }
+    .btn-cancel {
+      background: var(--raised); border: 1px solid var(--border);
+      color: var(--text); border-radius: 7px; padding: 0.55rem 1.1rem;
+      font-family: var(--sans); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-cancel:hover { border-color: var(--border2); }
+    .btn-del {
+      background: transparent; border: 1px solid var(--red);
+      color: var(--red); border-radius: 7px; padding: 0.55rem 1.1rem;
+      font-family: var(--sans); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-del:hover { background: rgba(255,95,95,0.1); }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN VIEW ─────────────────────────────────────────────────────────── -->
+<div id="view-login" class="view">
+  <div class="login-card">
+    <div class="login-logo">🖥️</div>
+    <h1>Admin Panel</h1>
+    <p class="sub">// Presentation Hub</p>
+
+    <div class="field">
+      <label for="u">Username</label>
+      <input type="text" id="u" autocomplete="username" placeholder="admin" />
+    </div>
+    <div class="field">
+      <label for="p">Password</label>
+      <input type="password" id="p" autocomplete="current-password" placeholder="••••••••" />
+    </div>
+
+    <div id="login-error"></div>
+
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Sign in</button>
+
+    <div class="login-footer">
+      <a href="/">← Back to public site</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN VIEW ─────────────────────────────────────────────────────────── -->
+<div id="view-admin" class="view">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🖥️</div>
+      <span class="topbar-title">Presentation Hub</span>
+      <span class="topbar-badge">Admin</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user"></span>
+      <a href="/" class="btn-sm">Public site ↗</a>
+      <button class="btn-sm" onclick="doLogout()">Log out</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="admin-body">
+    <!-- Upload panel -->
+    <div class="upload-panel">
+      <p class="panel-title">Upload presentation</p>
+
+      <div class="replace-banner" id="replace-banner">
+        <span>Replacing <strong id="replace-name-label"></strong></span>
+        <button onclick="cancelReplace()" title="Cancel">✕</button>
+      </div>
+
+      <label class="f-label" for="disp-name">Display name *</label>
+      <input class="f-input" type="text" id="disp-name" placeholder="e.g. Q3 Results" autocomplete="off" />
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-inp" accept=".html,.htm" />
+        <div class="dz-icon">📄</div>
+        <div class="dz-text">Drop a <strong>.html</strong> file or click to browse</div>
+        <div class="dz-file" id="dz-file"></div>
+      </div>
+
+      <div class="progress-rail" id="prog-rail"><div class="progress-fill" id="prog-fill"></div></div>
+
+      <button class="btn-upload" id="upload-btn" disabled onclick="doUpload()">↑ Upload</button>
+      <div class="upload-msg" id="upload-msg"></div>
+    </div>
+
+    <!-- List panel -->
+    <div class="list-panel">
+      <div class="list-header">
+        <p class="panel-title">All presentations</p>
+        <span id="pres-count">0</span>
+      </div>
+      <div id="pres-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Delete presentation?</h3>
+    <p id="modal-body"></p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-del"    id="modal-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let presentations  = [];
+  let replaceTarget  = null;
+  let selectedFile   = null;
+  let renamingFile   = null;
+  let pendingDelete  = null;
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  (async () => {
+    const res  = await fetch('/api/auth/me');
+    const data = await res.json();
+    if (data.authenticated) {
+      showAdmin(data.username);
+    } else {
+      show('view-login');
+      document.getElementById('u').focus();
+    }
+  })();
+
+  // ── View helpers ───────────────────────────────────────────────────────────
+  function show(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function showAdmin(username) {
+    document.getElementById('topbar-user').textContent = username;
+    show('view-admin');
+    loadPresentations();
+  }
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  document.getElementById('p').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  async function doLogin() {
+    const btn  = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    const u    = document.getElementById('u').value.trim();
+    const p    = document.getElementById('p').value;
+
+    if (!u || !p) { errEl.textContent = 'Username and password are required.'; return; }
+
+    btn.disabled = true;
+    errEl.textContent = '';
+
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showAdmin(u);
+      } else {
+        errEl.textContent = data.error || 'Login failed.';
+        document.getElementById('p').value = '';
+      }
+    } catch {
+      errEl.textContent = 'Network error — is the server running?';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  async function doLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    show('view-login');
+    document.getElementById('u').value = '';
+    document.getElementById('p').value = '';
+    document.getElementById('u').focus();
+  }
+
+  // ── Load presentations ─────────────────────────────────────────────────────
+  async function loadPresentations() {
+    try {
+      const res = await fetch('/api/presentations');
+      presentations = await res.json();
+    } catch {
+      presentations = [];
+    }
+    renderList();
+  }
+
+  // ── Render list ────────────────────────────────────────────────────────────
+  function renderList() {
+    const el = document.getElementById('pres-list');
+    document.getElementById('pres-count').textContent = presentations.length;
+
+    if (presentations.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="ei">🗂️</div>No presentations yet — upload one!</div>`;
+      return;
+    }
+
+    el.innerHTML = '';
+    presentations.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'pres-card';
+      card.dataset.fn = p.filename;
+      card.style.animationDelay = `${i * 35}ms`;
+
+      const date = new Date(p.updatedAt).toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+      const size = p.size < 1024 ? `${p.size} B` : `${(p.size/1024).toFixed(1)} KB`;
+
+      card.innerHTML = `
+        <div class="pres-icon">🖥️</div>
+        <div class="pres-info">
+          <div class="pres-name" id="pname-${CSS.escape(p.filename)}">${esc(p.displayName)}</div>
+          <div class="pres-meta">${esc(p.filename)} · ${size} · ${date}</div>
+        </div>
+        <div class="pres-actions">
+          <div class="icon-btn open" title="Open"    onclick="window.open('${esc(p.url)}','_blank')">↗</div>
+          <div class="icon-btn"      title="Rename"  onclick="startRename('${esc(p.filename)}','${esc(p.displayName)}')">✏️</div>
+          <div class="icon-btn rep"  title="Replace" onclick="startReplace('${esc(p.filename)}','${esc(p.displayName)}')">⬆</div>
+          <div class="icon-btn del"  title="Delete"  onclick="confirmDelete('${esc(p.filename)}','${esc(p.displayName)}')">🗑</div>
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+
+  // ── Drop zone ──────────────────────────────────────────────────────────────
+  const fileInp = document.getElementById('file-inp');
+  const dz      = document.getElementById('dropzone');
+  const dzFile  = document.getElementById('dz-file');
+
+  fileInp.addEventListener('change', () => pickFile(fileInp.files[0]));
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f && /\.html?$/i.test(f.name)) pickFile(f);
+  });
+
+  function pickFile(f) {
+    if (!f) return;
+    selectedFile = f;
+    dzFile.textContent = f.name;
+    dzFile.style.display = 'block';
+    syncUploadBtn();
+  }
+
+  document.getElementById('disp-name').addEventListener('input', syncUploadBtn);
+
+  function syncUploadBtn() {
+    document.getElementById('upload-btn').disabled =
+      !selectedFile || !document.getElementById('disp-name').value.trim();
+  }
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  async function doUpload() {
+    const name = document.getElementById('disp-name').value.trim();
+    if (!name || !selectedFile) return;
+
+    setMsg('');
+    showProg(true);
+
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    fd.append('name', name);
+    if (replaceTarget) fd.append('existingFilename', replaceTarget.filename);
+
+    try {
+      animateProg();
+      const res  = await fetch('/api/presentations', { method: 'POST', body: fd });
+      const data = await res.json();
+      showProg(false);
+
+      if (!res.ok) { setMsg(data.error || 'Upload failed.', true); return; }
+
+      setMsg(data.replaced ? `✓ Replaced "${data.displayName}"` : `✓ Uploaded "${data.displayName}"`, false);
+      resetUploadForm();
+      await loadPresentations();
+    } catch (err) {
+      showProg(false);
+      setMsg('Error: ' + err.message, true);
+    }
+  }
+
+  let progTimer;
+  function showProg(show) {
+    document.getElementById('prog-rail').style.display = show ? 'block' : 'none';
+    if (!show) { document.getElementById('prog-fill').style.width = '0'; clearInterval(progTimer); }
+  }
+  function animateProg() {
+    let w = 0;
+    progTimer = setInterval(() => {
+      w = Math.min(w + Math.random() * 18, 85);
+      document.getElementById('prog-fill').style.width = w + '%';
+    }, 180);
+  }
+  function setMsg(txt, isErr = false) {
+    const el = document.getElementById('upload-msg');
+    el.textContent = txt;
+    el.className = 'upload-msg ' + (isErr ? 'err' : 'ok');
+  }
+  function resetUploadForm() {
+    selectedFile = null;
+    fileInp.value = '';
+    document.getElementById('disp-name').value = '';
+    dzFile.style.display = 'none';
+    document.getElementById('upload-btn').disabled = true;
+    cancelReplace();
+  }
+
+  // ── Replace ────────────────────────────────────────────────────────────────
+  function startReplace(filename, displayName) {
+    replaceTarget = { filename, displayName };
+    document.getElementById('replace-name-label').textContent = displayName;
+    document.getElementById('replace-banner').classList.add('show');
+    document.getElementById('disp-name').value = displayName;
+    syncUploadBtn();
+    document.getElementById('disp-name').focus();
+  }
+  function cancelReplace() {
+    replaceTarget = null;
+    document.getElementById('replace-banner').classList.remove('show');
+  }
+
+  // ── Rename ─────────────────────────────────────────────────────────────────
+  function startRename(filename, currentName) {
+    if (renamingFile) cancelRename(renamingFile);
+    renamingFile = filename;
+    const el = document.getElementById(`pname-${CSS.escape(filename)}`);
+    if (!el) return;
+    el.innerHTML = `<input class="rename-inp" id="rinp" value="${esc(currentName)}" />`;
+    const inp = document.getElementById('rinp');
+    inp.focus(); inp.select();
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  commitRename(filename);
+      if (e.key === 'Escape') cancelRename(filename);
+    });
+    inp.addEventListener('blur', () => setTimeout(() => commitRename(filename), 120));
+  }
+
+  function cancelRename(filename) {
+    if (renamingFile !== filename) return;
+    renamingFile = null;
+    const p = presentations.find(x => x.filename === filename);
+    const el = document.getElementById(`pname-${CSS.escape(filename)}`);
+    if (el && p) el.textContent = p.displayName;
+  }
+
+  async function commitRename(filename) {
+    if (renamingFile !== filename) return;
+    const inp = document.getElementById('rinp');
+    if (!inp) return;
+    const newName = inp.value.trim();
+    renamingFile = null;
+    const p = presentations.find(x => x.filename === filename);
+    if (!newName || (p && newName === p.displayName)) { cancelRename(filename); return; }
+
+    try {
+      await fetch(`/api/presentations/${encodeURIComponent(filename)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: newName })
+      });
+      await loadPresentations();
+    } catch { cancelRename(filename); }
+  }
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  function confirmDelete(filename, displayName) {
+    pendingDelete = filename;
+    document.getElementById('modal-body').textContent = `"${displayName}" will be permanently removed.`;
+    document.getElementById('modal-confirm').onclick = doDelete;
+    document.getElementById('overlay').classList.add('show');
+  }
+  async function doDelete() {
+    closeModal();
+    if (!pendingDelete) return;
+    await fetch(`/api/presentations/${encodeURIComponent(pendingDelete)}`, { method: 'DELETE' });
+    pendingDelete = null;
+    await loadPresentations();
+  }
+  function closeModal() { document.getElementById('overlay').classList.remove('show'); }
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  });
+
+  // ── Utils ──────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+</script>
+</body>
+</html>

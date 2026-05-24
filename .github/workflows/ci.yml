@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start stack
+        run: |
+          cp .env.example .env
+          docker compose up -d
+
+      - name: Wait for healthy
+        run: |
+          for i in $(seq 1 20); do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' presentation-hub-api 2>/dev/null || echo "waiting")
+            echo "API health: $STATUS"
+            [ "$STATUS" = "healthy" ] && break
+            sleep 3
+          done
+
+      - name: Smoke test — public API
+        run: curl -sf http://localhost:8080/api/presentations
+
+      - name: Smoke test — health endpoint
+        run: curl -sf http://localhost:8080/api/health
+
+      - name: Smoke test — public page
+        run: curl -sf http://localhost:8080/ | grep -q "Presentation"
+
+      - name: Smoke test — admin page requires no redirect (SPA)
+        run: curl -sf http://localhost:8080/admin | grep -q "Admin Panel"
+
+      - name: Tear down
+        if: always()
+        run: docker compose down
