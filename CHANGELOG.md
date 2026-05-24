@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ## [Unreleased]
 
+---
+
+## [1.1.0] - 2026-05-24
+
 ### Added
 - GHCR workflow (`.github/workflows/docker.yml`) — builds and pushes the API image to `ghcr.io/sitolam/presentation-hub` on every semver tag push (`v*.*.*`), with GHA layer caching and automatic `latest`, `major.minor`, and `major` tag aliases.
 - `CHANGELOG.md` — this file.
@@ -18,7 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ---
 
-## [1.0.0] - 2025-05-24
+## [1.0.0] - 2026-05-24
 
 ### Added
 - Public landing page (`/`) — lists all uploaded presentations sorted by last modified.
@@ -30,5 +34,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 - `.env.example` with documented configuration variables.
 - `example.html` seed presentation.
 
-[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/sitolam/presentation-hub/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/sitolam/presentation-hub/releases/tag/v1.0.0
