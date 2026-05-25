@@ -132,9 +132,12 @@ presentation-hub/
 │       ├── ci.yml              # Build + smoke tests on push/PR
 │       └── docker.yml          # Build & push to GHCR on tag
 ├── api/
-│   ├── Dockerfile
 │   ├── package.json
 │   └── server.js               # Express API (auth + file management)
+├── docs/
+│   ├── admin-preview.html      # Standalone admin UI preview (no backend needed)
+│   ├── screenshot-admin.svg
+│   └── screenshot-landing.svg
 ├── nginx/
 │   ├── nginx.conf              # Reverse proxy config
 │   └── public/
@@ -145,6 +148,8 @@ presentation-hub/
 ├── .env.example
 ├── .gitignore
 ├── docker-compose.yml
+├── docker-entrypoint.sh
+├── Dockerfile
 └── README.md
 ```
 

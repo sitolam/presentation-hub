@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ---
 
+## [2.0.0] - 2026-05-25
+
+### Added
+- HTTPS support via reverse proxy — new `TRUST_PROXY=1` env var sets Express `trust proxy` and enables `secure` session cookies when the app sits behind a TLS-terminating proxy.
+- `docs/admin-preview.html` — self-contained admin UI preview that works without a running backend, useful for design review.
+
+### Changed
+- Public landing page fully redesigned: dark mode with animated glow orbs, dot-grid background, gradient heading, and glassmorphism presentation cards with scan-line hover effect (Syne + JetBrains Mono).
+- Admin login wired with `addEventListener` instead of inline `onclick` attributes; boot IIFE now has a `try/catch` so the login form is always shown even if the API is unreachable.
+- Internal Node API port hardcoded to `3000` in `server.js` — it was never intended to be user-configurable and was causing confusion with the host-side `PORT` variable.
+- `docker-compose.yml` `environment: PORT=3000` block removed; `PORT` in `.env` now unambiguously refers to the host port only.
+- README updated: screenshots section, HTTPS section, config table includes `TRUST_PROXY`, project structure reflects `docs/`.
+
+### Fixed
+- Healthcheck URL in the Option A `docker-compose.yml` README snippet corrected to `http://127.0.0.1/api/health` (was `localhost`).
+
+---
+
 ## [1.2.0] - 2026-05-24
 
 ### Changed
@@ -52,7 +70,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 - `.env.example` with documented configuration variables.
 - `example.html` seed presentation.
 
-[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/sitolam/presentation-hub/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/sitolam/presentation-hub/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sitolam/presentation-hub/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/sitolam/presentation-hub/releases/tag/v1.0.0
