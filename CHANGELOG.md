@@ -9,6 +9,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 
 ---
 
+## [2.0.1] - 2026-05-25
+
+### Fixed
+- Admin sign-in button now works — `display: flex` and `display: grid` were set directly on `#view-login` and `#view-admin` (ID specificity 0,1,0,0), overriding `.view { display: none }` (0,0,1,0) and keeping both views permanently visible. Removed the `display` declarations from the ID rules so only the `.active` selectors control visibility.
+
+---
+
 ## [2.0.0] - 2026-05-25
 
 ### Added
@@ -70,7 +77,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), version
 - `.env.example` with documented configuration variables.
 - `example.html` seed presentation.
 
-[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/sitolam/presentation-hub/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/sitolam/presentation-hub/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/sitolam/presentation-hub/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/sitolam/presentation-hub/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/sitolam/presentation-hub/compare/v1.0.0...v1.1.0
