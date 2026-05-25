@@ -1,0 +1,107 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g1" cx="20%" cy="22%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="88%" cy="82%" r="42%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vign" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
+    </radialGradient>
+    <linearGradient id="hgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#e8ecf8"/>
+      <stop offset="45%"  stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.07)"/>
+    </pattern>
+  </defs>
+
+  <!-- bg -->
+  <rect width="1280" height="720" fill="#03030a"/>
+  <rect width="1280" height="720" fill="url(#dots)"/>
+  <rect width="1280" height="720" fill="url(#g1)"/>
+  <rect width="1280" height="720" fill="url(#g2)"/>
+  <rect width="1280" height="720" fill="url(#vign)"/>
+
+  <!--
+    Layout math (1280px canvas):
+      shell max-width: 840px  → left edge = (1280-840)/2 = 220
+      shell padding: 80px top, 32px sides
+      content left  = 220+32 = 252
+      content right = 220+840-32 = 1028
+      content width = 776
+  -->
+
+  <!-- Badge  y=80 (top padding) -->
+  <rect x="252" y="80" width="185" height="22" rx="11"
+        fill="rgba(129,140,248,0.08)" stroke="rgba(129,140,248,0.2)" stroke-width="1"/>
+  <circle cx="268" cy="91" r="3" fill="#818cf8"/>
+  <text x="278" y="95" font-family="'Courier New',monospace" font-size="9.5"
+        fill="#818cf8" letter-spacing="1.8">PRESENTATION LIBRARY</text>
+
+  <!-- h1 two lines   line-height 0.95 × ~72px font ≈ 68px per line -->
+  <text x="252" y="188" font-family="'Segoe UI',system-ui,sans-serif" font-size="72"
+        font-weight="800" fill="url(#hgrad)" letter-spacing="-2.5">Presentation</text>
+  <text x="252" y="256" font-family="'Segoe UI',system-ui,sans-serif" font-size="72"
+        font-weight="800" fill="url(#hgrad)" letter-spacing="-2.5">Hub</text>
+
+  <!-- subtitle -->
+  <text x="252" y="280" font-family="'Courier New',monospace" font-size="11"
+        fill="#434963">// <tspan fill="#818cf8">3 files indexed</tspan></text>
+
+  <!--
+    Cards:  list starts ~y=336 (header margin-bottom 56px after sub)
+    Card height ≈ 66px, gap ≈ 9px
+    Cards span x=252, width=776
+  -->
+
+  <!-- Card 1  y=336 -->
+  <rect x="252" y="336" width="776" height="66" rx="10"
+        fill="rgba(255,255,255,0.028)" stroke="rgba(255,255,255,0.065)" stroke-width="1"/>
+  <text x="278" y="374" font-family="'Courier New',monospace" font-size="10" fill="#434963">01</text>
+  <text x="316" y="369" font-family="'Segoe UI',system-ui,sans-serif" font-size="14"
+        font-weight="600" fill="#bfc8e0">Q3 Strategy Overview</text>
+  <text x="316" y="386" font-family="'Courier New',monospace" font-size="10"
+        fill="#434963">q3-strategy-overview.html · Jan 12, 2025 · 84.2KB</text>
+  <text x="1002" y="374" font-family="'Segoe UI',system-ui,sans-serif" font-size="13"
+        fill="#818cf8" opacity="0.4">↗</text>
+
+  <!-- Card 2  y=411 -->
+  <rect x="252" y="411" width="776" height="66" rx="10"
+        fill="rgba(255,255,255,0.028)" stroke="rgba(255,255,255,0.065)" stroke-width="1"/>
+  <text x="278" y="449" font-family="'Courier New',monospace" font-size="10" fill="#434963">02</text>
+  <text x="316" y="444" font-family="'Segoe UI',system-ui,sans-serif" font-size="14"
+        font-weight="600" fill="#bfc8e0">Product Roadmap 2025</text>
+  <text x="316" y="461" font-family="'Courier New',monospace" font-size="10"
+        fill="#434963">product-roadmap-2025.html · Jan 8, 2025 · 112.7KB</text>
+  <text x="1002" y="449" font-family="'Segoe UI',system-ui,sans-serif" font-size="13"
+        fill="#818cf8" opacity="0.4">↗</text>
+
+  <!-- Card 3  y=486  (hovered state) -->
+  <rect x="256" y="486" width="776" height="66" rx="10"
+        fill="rgba(255,255,255,0.055)" stroke="rgba(129,140,248,0.55)" stroke-width="1"/>
+  <!-- left accent bar -->
+  <rect x="256" y="499" width="2" height="40" rx="1" fill="url(#hgrad)"/>
+  <text x="282" y="524" font-family="'Courier New',monospace" font-size="10" fill="#818cf8">03</text>
+  <text x="320" y="519" font-family="'Segoe UI',system-ui,sans-serif" font-size="14"
+        font-weight="600" fill="#eaedf8">Engineering All-Hands</text>
+  <text x="320" y="536" font-family="'Courier New',monospace" font-size="10"
+        fill="#555e78">engineering-all-hands.html · Dec 19, 2024 · 67.4KB</text>
+  <text x="1006" y="524" font-family="'Segoe UI',system-ui,sans-serif" font-size="13"
+        fill="#818cf8">↗</text>
+
+  <!-- Footer separator  y=608 -->
+  <line x1="252" y1="608" x2="1028" y2="608" stroke="rgba(255,255,255,0.065)" stroke-width="1"/>
+  <text x="252" y="626" font-family="'Courier New',monospace" font-size="11" fill="#434963">3 presentations</text>
+  <!-- admin link pill -->
+  <rect x="962" y="612" width="66" height="20" rx="10"
+        fill="transparent" stroke="rgba(129,140,248,0.22)" stroke-width="1"/>
+  <text x="995" y="626" text-anchor="middle" font-family="'Courier New',monospace"
+        font-size="10" fill="#818cf8">Admin ↗</text>
+</svg>

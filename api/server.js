@@ -7,12 +7,13 @@ const fs             = require("fs");
 const path           = require("path");
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const PORT             = parseInt(process.env.PORT || "3000", 10);
+const PORT             = 3000;
 const PRESENTATIONS_DIR = process.env.PRESENTATIONS_DIR || "/data/presentations";
 const ADMIN_USERNAME   = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD || "changeme";
 const SESSION_SECRET   = process.env.SESSION_SECRET || "dev-secret-change-in-production";
 const MAX_UPLOAD_MB    = parseInt(process.env.MAX_UPLOAD_MB || "50", 10);
+const TRUST_PROXY      = process.env.TRUST_PROXY === "1";
 
 if (SESSION_SECRET === "dev-secret-change-in-production") {
   console.warn("[WARN] SESSION_SECRET is not set — use a real secret in production!");
@@ -22,6 +23,8 @@ fs.mkdirSync(PRESENTATIONS_DIR, { recursive: true });
 
 // ── App setup ─────────────────────────────────────────────────────────────────
 const app = express();
+
+if (TRUST_PROXY) app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -33,8 +36,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    // set secure:true if you put this behind HTTPS in production
-    secure: false,
+    secure: TRUST_PROXY,
     maxAge: 8 * 60 * 60 * 1000, // 8 hours
   },
 }));

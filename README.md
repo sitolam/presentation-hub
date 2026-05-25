@@ -8,6 +8,14 @@ Self-hosted HTML presentation library with a public browsing page and a password
 
 ---
 
+## Screenshots
+
+| Public landing page | Admin panel |
+|---|---|
+| ![Landing page](docs/screenshot-landing.svg) | ![Admin panel](docs/screenshot-admin.svg) |
+
+---
+
 ## Features
 
 | | |
@@ -40,12 +48,10 @@ services:
     ports:
       - "${PORT:-8080}:80"
     env_file: .env
-    environment:
-      - PORT=3000
     volumes:
       - ./presentations:/data/presentations
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/api/health"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -111,6 +117,7 @@ All configuration lives in `.env`:
 | `ADMIN_PASSWORD` | `changeme` | Admin panel password — **change this** |
 | `SESSION_SECRET` | *(dev value)* | Secret for signing session cookies — **change this** |
 | `MAX_UPLOAD_MB` | `50` | Maximum upload size in MB |
+| `TRUST_PROXY` | `0` | Set to `1` when running behind a reverse proxy that handles HTTPS |
 
 > **Never commit `.env`** — it is in `.gitignore`.
 
@@ -209,12 +216,11 @@ git push origin v1.2.3
 
 ---
 
-## Production notes
+## HTTPS
 
-- Put the stack behind a reverse proxy (Caddy, Traefik, etc.) with **HTTPS**.
-- Set `secure: true` on the session cookie in `api/server.js` once HTTPS is in place.
-- Use a strong random `SESSION_SECRET` — generate one with `openssl rand -hex 32`.
-- Change the default `ADMIN_PASSWORD` before exposing the service publicly.
+The app does not handle TLS itself. Put it behind a reverse proxy (Caddy, Traefik, Nginx, etc.) that terminates HTTPS, and set `TRUST_PROXY=1` in `.env`. This enables secure session cookies and correct client IP forwarding.
+
+> Also change `ADMIN_PASSWORD` and set a strong random `SESSION_SECRET` (`openssl rand -hex 32`) before exposing the service publicly.
 
 ---
 
